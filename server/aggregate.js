@@ -164,6 +164,8 @@ export function briefingSnapshot(data) {
     course: it.course || undefined,
     when: it.when,
     status: it.status || undefined,
+    priority: it.priority === 'high' ? 'high' : undefined,
+    notes: it.kind === 'task' && it.notes ? it.notes.slice(0, 200) : undefined,
   });
   const openWork = data.items.filter((it) => it.kind !== 'event' && it.when && ['todo', 'missing'].includes(it.status));
   const events = data.items.filter((it) => it.kind === 'event');

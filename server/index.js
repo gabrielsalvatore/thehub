@@ -42,7 +42,9 @@ app.get('/api/dashboard', async (req, res) => {
 
 app.get('/api/briefing', async (req, res) => {
   if (!ai.isEnabled()) return res.status(400).json({ error: 'Add ANTHROPIC_API_KEY to .env to enable the AI briefing.' });
-  const data = lastDashboard || (lastDashboard = await dashboard());
+  // Rebuild rather than reuse the last dashboard so tasks added since then count.
+  // Remote sources are cached for 10 minutes and email triage is cached per email.
+  const data = (lastDashboard = await dashboard());
   res.json(await ai.weeklyBriefing(briefingSnapshot(data), { force: req.query.force === '1' }));
 });
 

@@ -1,0 +1,31 @@
+{
+  "name": "hub",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Personal weekly command center: Canvas, calendars, email, tasks and habits in one place.",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,magenta \"CLIENT_URL=http://localhost:5173 node --watch server/index.js\" \"vite\"",
+    "build": "vite build",
+    "start": "vite build && node server/index.js",
+    "serve": "node server/index.js",
+    "autostart:install": "node scripts/autostart.js install",
+    "autostart:uninstall": "node scripts/autostart.js uninstall",
+    "app:install": "node scripts/app.js install",
+    "app:uninstall": "node scripts/app.js uninstall"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.4.0",
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0",
+    "multer": "^2.5.0",
+    "node-ical": "^0.27.3"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.2.1",
+    "concurrently": "^10.0.6",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "vite": "^8.3.5"
+  }
+}

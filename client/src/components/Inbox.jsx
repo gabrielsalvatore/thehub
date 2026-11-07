@@ -4,6 +4,13 @@ import { relative } from '../dates.js';
 
 const PRIORITY_ORDER = { high: 0, medium: 1, low: 2 };
 
+// Short label for which inbox an email came from.
+function accountLabel(email) {
+  if (/@(gmail|googlemail)\.com$/i.test(email)) return 'Personal';
+  if (/\.edu$/i.test(email)) return 'School';
+  return email;
+}
+
 function senderName(from) {
   const m = from.match(/^"?([^"<]+?)"?\s*</);
   return m ? m[1] : from;
@@ -67,7 +74,7 @@ export default function Inbox({ emails, sources, reload, goTo }) {
             <div className="email-top">
               <span className="email-from">{senderName(e.from)}</span>
               <span className="muted">
-                {e.source === 'gmail' ? 'Gmail' : 'Outlook'} · {relative(new Date(e.receivedAt))}
+                {e.source === 'gmail' ? (e.account ? accountLabel(e.account) : 'Gmail') : 'Outlook'} · {relative(new Date(e.receivedAt))}
               </span>
             </div>
             <a className="email-subject" href={e.url} target="_blank" rel="noreferrer">

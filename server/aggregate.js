@@ -91,10 +91,10 @@ export async function dashboard({ force = false } = {}) {
 
   const [canvasRes, googleCal, outlookCal, icsRes, gmail, outlookMail] = await Promise.all([
     runSource('canvas', canvas.isConfigured(), true, async () => ({ items: await canvas.fetchItems(range) }), force),
-    runSource('google-cal', google.isConfigured(), google.isConnected(), async () => ({ items: await google.fetchEvents(range) }), force),
+    runSource('google-cal', google.isConfigured(), google.isConnected(), () => google.fetchEvents(range), force),
     runSource('outlook-cal', microsoft.isConfigured(), microsoft.isConnected(), async () => ({ items: await microsoft.fetchEvents(range) }), force),
     runSource('ics', ics.isConfigured(), true, () => ics.fetchEvents(range), force),
-    runSource('gmail', google.isConfigured(), google.isConnected(), async () => ({ emails: await google.fetchEmails() }), force),
+    runSource('gmail', google.isConfigured(), google.isConnected(), () => google.fetchEmails(), force),
     runSource('outlook-mail', microsoft.isConfigured(), microsoft.isConnected(), async () => ({ emails: await microsoft.fetchEmails() }), force),
   ]);
 
@@ -130,7 +130,7 @@ export async function dashboard({ force = false } = {}) {
     applications: db.applications,
     sources: {
       canvas: strip(canvasRes),
-      google: mergeStatus(googleCal, gmail),
+      google: { ...mergeStatus(googleCal, gmail), accounts: google.isConnected() ? google.connectedAccounts() : [] },
       outlook: mergeStatus(outlookCal, outlookMail),
       ics: { ...strip(icsRes), feeds: ics.feeds().map((f) => f.name) },
       ai: aiStatus,

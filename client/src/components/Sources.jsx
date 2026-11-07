@@ -71,8 +71,9 @@ export default function Sources({ sources, reload }) {
   const connected = params.get('connected');
   const oauthError = params.get('error');
 
-  const disconnect = async (provider) => {
-    await api.post(`/api/disconnect/${provider}`);
+  const disconnect = async (provider, account) => {
+    if (account && !confirm(`Disconnect ${account} from Hub?`)) return;
+    await api.post(`/api/disconnect/${provider}`, account ? { account } : {});
     reload(true);
   };
 
@@ -104,16 +105,35 @@ export default function Sources({ sources, reload }) {
                     Connect
                   </a>
                 )}
+                {st.accounts?.length > 0 && (
+                  <ul className="account-list">
+                    {st.accounts.map((a) => (
+                      <li key={a}>
+                        <span>{a}</span>
+                        <button className="btn btn-ghost btn-small" onClick={() => disconnect(s.oauth, a)}>
+                          Disconnect
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 {s.oauth && ['ok', 'warning', 'error'].includes(st.status) && (
                   <div className="actions">
+                    {s.key === 'google' && (
+                      <a className="btn" href="/auth/google">
+                        + Add another Google account
+                      </a>
+                    )}
                     {st.status === 'error' && (
                       <a className="btn btn-primary" href={`/auth/${s.oauth}`}>
                         Reconnect
                       </a>
                     )}
-                    <button className="btn btn-ghost" onClick={() => disconnect(s.oauth)}>
-                      Disconnect
-                    </button>
+                    {!st.accounts?.length && (
+                      <button className="btn btn-ghost" onClick={() => disconnect(s.oauth)}>
+                        Disconnect
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

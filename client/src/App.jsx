@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from './api.js';
 import Dashboard from './components/Dashboard.jsx';
+import DayPlan from './components/DayPlan.jsx';
 import Applications from './components/Applications.jsx';
 import Syllabus from './components/Syllabus.jsx';
 import Sources from './components/Sources.jsx';
@@ -8,6 +9,7 @@ import { useMeetingReminders } from './reminders.js';
 import { fmtDay } from './dates.js';
 
 const TABS = [
+  { id: 'today', label: 'Today' },
   { id: 'week', label: 'This week' },
   { id: 'applications', label: 'Applications' },
   { id: 'syllabus', label: 'Syllabi' },
@@ -96,6 +98,7 @@ export default function App() {
 
       <main>
         {!data && !error && <div className="empty">Loading your week…</div>}
+        {data && tab === 'today' && <DayPlan data={data} reload={load} />}
         {data && tab === 'week' && <Dashboard data={data} reload={load} goTo={switchTab} />}
         {data && tab === 'applications' && <Applications applications={data.applications} reload={load} />}
         {tab === 'syllabus' && <Syllabus reload={load} />}

@@ -19,6 +19,7 @@ const DEFAULTS = {
     { id: 'leetcode', name: 'LeetCode problem' },
   ],
   habitLog: {}, // { "YYYY-MM-DD": { habitId: true } }
+  dayPlans: {}, // { "YYYY-MM-DD": { top: [{ id, text, done, itemId? }], blocks: [{ id, start, end, label }] } }
   completed: {}, // { itemId: true } – local check-offs for Canvas/calendar/syllabus items
   dismissedEmails: {}, // { emailId: true }
   tokens: {}, // { google: {...}, microsoft: {...} }

@@ -1042,3 +1042,48 @@ a:focus-visible {
     margin-left: 0;
   }
 }
+
+.account-list { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 6px; }
+.account-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 0.92em; overflow-wrap: anywhere; }
+
+/* ---------- Today (top 3 + time blocks) ---------- */
+
+.dayplan-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dayplan-head h2 { margin: 0; font-size: 20px; font-variant-numeric: tabular-nums; }
+.dayplan-weekday { text-transform: uppercase; letter-spacing: 0.04em; }
+.step-tag {
+  display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 99px; margin-right: 6px; vertical-align: middle;
+}
+.dayplan-now { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; border-left: 4px solid var(--accent); }
+.top3 { display: flex; flex-direction: column; gap: 8px; }
+.top3-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.top3-row input[type='checkbox'] { width: 18px; height: 18px; accent-color: var(--accent); flex-shrink: 0; }
+.top3-num { font-weight: 700; color: var(--text-3); width: 14px; text-align: center; }
+.top3-text { flex: 1; min-width: 0; border: none; background: transparent; font: inherit; font-size: 15px; color: var(--text); padding: 4px 0; }
+.top3-text:focus { outline: none; }
+.top3-row:focus-within { border-color: var(--accent); }
+.top3-done .top3-text { text-decoration: line-through; color: var(--text-3); }
+.top3-add { align-self: flex-start; }
+.suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; align-items: center; }
+.suggestions > .muted { width: 100%; font-size: 13px; }
+.chip {
+  border: 1px dashed var(--border); background: var(--surface-2); color: var(--text); border-radius: 99px;
+  padding: 4px 10px; font: inherit; font-size: 13px; cursor: pointer; text-align: left; max-width: 100%; overflow-wrap: anywhere;
+}
+.chip:hover { border-color: var(--accent); }
+.blocks { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.block { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 8px; border-left: 3px solid var(--border); background: var(--surface-2); }
+.block input[type='time'] { font: inherit; font-size: 13px; border: 1px solid var(--border); border-radius: 6px; padding: 2px 4px; background: var(--surface); color: var(--text); width: 104px; }
+.block-input { flex: 1; min-width: 0; font: inherit; border: none; background: transparent; color: var(--text); padding: 4px; }
+.block-input:focus { outline: 1px solid var(--accent); border-radius: 4px; }
+.block-top { border-left-color: var(--accent); }
+.block-now { background: var(--accent-soft); border-left-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.block-event { color: var(--text-3); background: transparent; border-left-style: dashed; font-size: 13px; }
+.block-time { width: 220px; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.block-label { overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .block { flex-wrap: wrap; }
+  .block-input { flex-basis: 100%; }
+  .block-time { width: auto; }
+}

@@ -58,6 +58,33 @@ app.post('/api/complete', (req, res) => {
   res.json({ ok: true });
 });
 
+// ---------- Day plan (top 3 + time blocks) ----------
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_RE = /^\d{2}:\d{2}$/;
+const str = (v, max = 300) => (typeof v === 'string' ? v.slice(0, max) : '');
+
+app.get('/api/plan/:date', (req, res) => {
+  if (!DATE_RE.test(req.params.date)) return res.status(400).json({ error: 'Bad date' });
+  res.json(store.get().dayPlans[req.params.date] || { top: [], blocks: [] });
+});
+
+app.put('/api/plan/:date', (req, res) => {
+  if (!DATE_RE.test(req.params.date)) return res.status(400).json({ error: 'Bad date' });
+  const top = (req.body.top || []).slice(0, 3).map((t) => ({
+    id: str(t.id, 64) || store.newId(),
+    text: str(t.text),
+    done: Boolean(t.done),
+    itemId: str(t.itemId, 200) || null,
+  }));
+  const blocks = (req.body.blocks || []).slice(0, 40)
+    .filter((b) => TIME_RE.test(b.start) && TIME_RE.test(b.end))
+    .map((b) => ({ id: str(b.id, 64) || store.newId(), start: b.start, end: b.end, label: str(b.label) }));
+  const plan = { top, blocks };
+  store.update((db) => (db.dayPlans[req.params.date] = plan));
+  res.json(plan);
+});
+
 // ---------- Tasks ----------
 
 const TASK_FIELDS = ['title', 'category', 'due', 'priority', 'notes', 'done'];
@@ -213,7 +240,7 @@ app.get('/auth/:provider/callback', async (req, res) => {
 });
 
 app.post('/api/disconnect/:provider', (req, res) => {
-  providers[req.params.provider]?.disconnect();
+  providers[req.params.provider]?.disconnect(req.body?.account);
   invalidate();
   res.json({ ok: true });
 });

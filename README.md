@@ -62,6 +62,8 @@ Hub uses the Planner API, so it sees **missing**, **submitted** and **graded** s
 4. Under **Clients → Create client**, choose type **Web application** and add the authorized redirect URI `http://localhost:4321/auth/google/callback`.
 5. Put the client ID and secret into `.env` as `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. Then click **Connect** in the Sources tab.
 
+To add more accounts (for example a school account and a personal Gmail), click **+ Add another Google account** in the Sources tab. Their inboxes and calendars are merged, and each email shows which account it came from. A Google Cloud project with an **Internal** audience only lets accounts from that Workspace sign in. To add a personal Gmail, switch the audience to **External** and add the Gmail address as a test user.
+
 Access is read-only (`calendar.readonly`, `gmail.readonly`). While the app is in **Testing** mode, Google expires the login after 7 days, and Hub will ask you to reconnect. To stop that, click **Publish app** on the Audience page. Google will show an "unverified app" warning when you sign in, which is fine for your own account.
 
 ### Outlook.com (mail + calendar)

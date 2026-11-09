@@ -1075,8 +1075,13 @@ a:focus-visible {
 .blocks { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
 .block { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 8px; border-left: 3px solid var(--border); background: var(--surface-2); }
 .block input[type='time'] { font: inherit; font-size: 13px; border: 1px solid var(--border); border-radius: 6px; padding: 2px 4px; background: var(--surface); color: var(--text); width: 104px; }
-.block-input { flex: 1; min-width: 0; font: inherit; border: none; background: transparent; color: var(--text); padding: 4px; }
-.block-input:focus { outline: 1px solid var(--accent); border-radius: 4px; }
+.block-input { flex: 1; min-width: 0; padding: 4px; }
+.block-open {
+  font: inherit; color: inherit; border: none; background: transparent; text-align: left; cursor: pointer;
+  border-radius: 4px; display: flex; align-items: center; gap: 6px; overflow-wrap: anywhere;
+}
+.block-open:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.block-has-notes { font-size: 12px; margin-left: auto; }
 .block-top { border-left-color: var(--accent); }
 .block-now { background: var(--accent-soft); border-left-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
 .block-event { color: var(--text-3); background: transparent; border-left-style: dashed; font-size: 13px; }
@@ -1087,3 +1092,34 @@ a:focus-visible {
   .block-input { flex-basis: 100%; }
   .block-time { width: auto; }
 }
+
+/* Block details pop-up */
+.details {
+  border: 1px solid var(--border); border-radius: 16px; padding: 0; width: min(560px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px); background: var(--surface); color: var(--text); box-shadow: 0 20px 50px rgb(0 0 0 / 0.25);
+}
+.details::backdrop { background: rgb(15 18 25 / 0.45); }
+.details-body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 14px; }
+.details-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.details-time { font-variant-numeric: tabular-nums; }
+.details-close { margin-left: auto; }
+.details-title { margin: 0; font-size: 20px; font-weight: 650; overflow-wrap: anywhere; }
+.details-title-input { width: 100%; border: 1px solid transparent; border-radius: 8px; padding: 4px 6px; margin-left: -6px; background: transparent; color: var(--text); font-family: inherit; }
+.details-title-input:hover, .details-title-input:focus { border-color: var(--border); outline: none; }
+.details-times { display: flex; gap: 16px; flex-wrap: wrap; }
+.details-times label { display: flex; align-items: center; gap: 6px; color: var(--text-2); font-size: 14px; }
+.details-times input { font: inherit; border: 1px solid var(--border); border-radius: 6px; padding: 4px 6px; background: var(--surface); color: var(--text); }
+.details-done { display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; }
+.details-done input { width: 18px; height: 18px; accent-color: var(--accent); }
+.details-linked { background: var(--surface-2); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.details-linked dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 0; font-size: 14px; }
+.details-linked dt { color: var(--text-3); }
+.details-linked dd { margin: 0; overflow-wrap: anywhere; }
+.details-text { margin: 0; white-space: pre-wrap; font-size: 14px; color: var(--text-2); overflow-wrap: anywhere; }
+.details-link-to { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.details-link-to > .muted { width: 100%; font-size: 13px; }
+.details-notes { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--text-2); }
+.details-notes textarea { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; resize: vertical; }
+.details-notes textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.details-foot { display: flex; justify-content: space-between; gap: 8px; }
+.btn-danger-text { color: var(--danger); }

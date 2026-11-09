@@ -79,7 +79,7 @@ app.put('/api/plan/:date', (req, res) => {
   }));
   const blocks = (req.body.blocks || []).slice(0, 40)
     .filter((b) => TIME_RE.test(b.start) && TIME_RE.test(b.end))
-    .map((b) => ({ id: str(b.id, 64) || store.newId(), start: b.start, end: b.end, label: str(b.label) }));
+    .map((b) => ({ id: str(b.id, 64) || store.newId(), start: b.start, end: b.end, label: str(b.label), notes: str(b.notes, 4000) }));
   const plan = { top, blocks };
   store.update((db) => (db.dayPlans[req.params.date] = plan));
   res.json(plan);

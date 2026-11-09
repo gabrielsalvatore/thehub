@@ -44,6 +44,7 @@ export default function DayPlan({ data, reload }) {
   const [date, setDate] = useState(planDateFor);
   const [plan, setPlan] = useState(null);
   const [now, setNow] = useState(new Date());
+  const [openId, setOpenId] = useState(null); // block or event shown in the details pop-up
   const saveTimer = useRef(null);
 
   useEffect(() => {
@@ -89,7 +90,7 @@ export default function DayPlan({ data, reload }) {
         const s = parseWhen(it.when);
         return s >= start && s < end;
       })
-      .map((it) => ({ id: it.id, start: toHHMM(parseWhen(it.when)), end: it.end ? toHHMM(new Date(it.end)) : null, label: it.title, event: true }));
+      .map((it) => ({ id: it.id, start: toHHMM(parseWhen(it.when)), end: it.end ? toHHMM(new Date(it.end)) : null, label: it.title, event: true, item: it }));
   }, [data.items, date]);
 
   if (!plan) return <div className="empty">Loading your plan…</div>;
@@ -121,7 +122,9 @@ export default function DayPlan({ data, reload }) {
   const addBlock = () => {
     const last = blocks[blocks.length - 1];
     const start = last ? last.end : toHHMM(new Date(Math.ceil(+now / 900_000) * 900_000));
-    change({ ...plan, blocks: [...plan.blocks, { id: newId(), start, end: addMinutes(start, 60), label: '' }] });
+    const id = newId();
+    change({ ...plan, blocks: [...plan.blocks, { id, start, end: addMinutes(start, 60), label: '', notes: '' }] });
+    setOpenId(id);
   };
 
   const nowMin = dayMinutes(toHHMM(now));
@@ -237,14 +240,19 @@ export default function DayPlan({ data, reload }) {
                     {fmtHHMM(b.start)}
                     {b.end && `–${fmtHHMM(b.end)}`}
                   </span>
-                  <span className="block-label">{b.label}</span>
+                  <button className="block-open block-label" onClick={() => setOpenId(b.id)}>
+                    {b.label}
+                  </button>
                 </div>
               ) : (
                 <div key={b.id} className={`block ${inBlock(b) ? 'block-now' : ''} ${topLabels.includes(b.label) ? 'block-top' : ''}`}>
                   <input type="time" value={b.start} onChange={(e) => e.target.value && setBlock(b.id, { start: e.target.value })} aria-label="Start" />
                   <span className="muted">–</span>
                   <input type="time" value={b.end} onChange={(e) => e.target.value && setBlock(b.id, { end: e.target.value })} aria-label="End" />
-                  <input className="block-input" list="top3-labels" value={b.label} placeholder="What you'll do" onChange={(e) => setBlock(b.id, { label: e.target.value })} />
+                  <button className="block-open block-input" onClick={() => setOpenId(b.id)}>
+                    <span>{b.label || <span className="muted">Untitled block</span>}</span>
+                    {b.notes && <span className="block-has-notes" aria-label="Has notes">📝</span>}
+                  </button>
                   <button className="icon-btn" onClick={() => removeBlock(b.id)} aria-label="Remove block" title="Remove">
                     ×
                   </button>
@@ -257,6 +265,164 @@ export default function DayPlan({ data, reload }) {
           </button>
         </section>
       </div>
+
+      {openId && (
+        <BlockDetails
+          entry={schedule.find((b) => b.id === openId)}
+          top={top}
+          items={data.items}
+          isNow={inBlock(schedule.find((b) => b.id === openId) || {})}
+          onToggleTop={toggleTop}
+          onChange={(fields) => setBlock(openId, fields)}
+          onDelete={() => {
+            removeBlock(openId);
+            setOpenId(null);
+          }}
+          onClose={() => setOpenId(null)}
+        />
+      )}
     </div>
+  );
+}
+
+const SOURCE_NAMES = { canvas: 'Canvas', manual: 'Task', syllabus: 'Syllabus', applications: 'Applications', google: 'Google Calendar', outlook: 'Outlook', ics: 'Calendar feed' };
+
+// Pop-up with everything about one block (or a calendar event): times, the
+// top-3 item it works on, that item's details and link, and your own notes.
+function BlockDetails({ entry, top, items, isNow, onToggleTop, onChange, onDelete, onClose }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    ref.current?.showModal();
+  }, []);
+  if (!entry) return null;
+
+  const topIndex = entry.event ? -1 : top.findIndex((t) => t.text && t.text === entry.label);
+  const topItem = top[topIndex];
+  const linked = entry.event ? entry.item : topItem?.itemId && items.find((it) => it.id === topItem.itemId);
+  const minutes = entry.end ? (dayMinutes(entry.end) - dayMinutes(entry.start) + 24 * 60) % (24 * 60) : null;
+
+  return (
+    <dialog ref={ref} className="details" onClose={onClose} onClick={(e) => e.target === ref.current && ref.current.close()}>
+      <div className="details-body">
+        <div className="details-head">
+          <span className="muted details-time">
+            {fmtHHMM(entry.start)}
+            {entry.end && ` – ${fmtHHMM(entry.end)}`}
+            {minutes ? ` · ${minutes >= 60 ? `${Math.floor(minutes / 60)} h ` : ''}${minutes % 60 ? `${minutes % 60} min` : ''}` : ''}
+          </span>
+          {isNow && <span className="step-tag">Now</span>}
+          {topIndex >= 0 && <span className="step-tag">Top 3 · #{topIndex + 1}</span>}
+          {entry.event && <span className="badge">Calendar event</span>}
+          <button className="icon-btn details-close" onClick={() => ref.current.close()} aria-label="Close">
+            ×
+          </button>
+        </div>
+
+        {entry.event ? (
+          <h2 className="details-title">{entry.label}</h2>
+        ) : (
+          <input className="details-title details-title-input" value={entry.label} placeholder="What you'll do" list="top3-labels" onChange={(e) => onChange({ label: e.target.value })} aria-label="Block title" />
+        )}
+
+        {!entry.event && (
+          <div className="details-times">
+            <label>
+              Start <input type="time" value={entry.start} onChange={(e) => e.target.value && onChange({ start: e.target.value })} />
+            </label>
+            <label>
+              End <input type="time" value={entry.end} onChange={(e) => e.target.value && onChange({ end: e.target.value })} />
+            </label>
+          </div>
+        )}
+
+        {topItem && (
+          <label className="details-done">
+            <input type="checkbox" checked={topItem.done} onChange={() => onToggleTop(topIndex)} />
+            {topItem.done ? 'Done ✓' : 'Mark this top-3 item done'}
+          </label>
+        )}
+
+        {linked && (
+          <div className="details-linked">
+            <dl>
+              {!entry.event && linked.when && (
+                <>
+                  <dt>Due</dt>
+                  <dd>{dueLabel(linked)}</dd>
+                </>
+              )}
+              {linked.course && (
+                <>
+                  <dt>Course</dt>
+                  <dd>{linked.course}</dd>
+                </>
+              )}
+              {linked.calendar && (
+                <>
+                  <dt>Calendar</dt>
+                  <dd>{linked.calendar}</dd>
+                </>
+              )}
+              {linked.location && (
+                <>
+                  <dt>Where</dt>
+                  <dd>{linked.location}</dd>
+                </>
+              )}
+              {linked.priority && linked.priority !== 'normal' && (
+                <>
+                  <dt>Priority</dt>
+                  <dd>{linked.priority}</dd>
+                </>
+              )}
+              <dt>From</dt>
+              <dd>{SOURCE_NAMES[linked.source] || linked.source}</dd>
+            </dl>
+            {(linked.notes || linked.description) && <p className="details-text">{linked.notes || linked.description}</p>}
+            <div className="actions">
+              {linked.joinUrl && (
+                <a className="btn btn-primary btn-small" href={linked.joinUrl} target="_blank" rel="noreferrer">
+                  Join meeting
+                </a>
+              )}
+              {linked.url && (
+                <a className="btn btn-small" href={linked.url} target="_blank" rel="noreferrer">
+                  Open in {SOURCE_NAMES[linked.source] || 'source'} ↗
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
+        {!entry.event && !topItem && top.some((t) => t.text) && (
+          <div className="details-link-to">
+            <span className="muted">Work on a top-3 item in this block:</span>
+            {top.filter((t) => t.text).map((t, i) => (
+              <button key={t.id} className="chip" onClick={() => onChange({ label: t.text })}>
+                #{i + 1} {t.text}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {!entry.event && (
+          <label className="details-notes">
+            <span>Notes for this block</span>
+            <textarea rows={6} value={entry.notes || ''} placeholder="Steps, links, what done looks like…" onChange={(e) => onChange({ notes: e.target.value })} />
+          </label>
+        )}
+
+        {!entry.event && (
+          <div className="details-foot">
+            <button className="btn btn-ghost btn-danger-text" onClick={onDelete}>
+              Delete block
+            </button>
+            <button className="btn btn-primary" onClick={() => ref.current.close()}>
+              Done
+            </button>
+          </div>
+        )}
+      </div>
+    </dialog>
   );
 }

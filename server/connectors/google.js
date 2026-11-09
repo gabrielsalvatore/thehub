@@ -218,6 +218,7 @@ async function accountEvents(acct, { start, end }) {
           end: ev.end?.dateTime || ev.end?.date || null,
           allDay: !ev.start.dateTime,
           location: ev.location || null,
+          description: ev.description ? clip(htmlToText(ev.description), 1500) : null,
           url: ev.htmlLink,
           joinUrl: meetingLink(ev),
         }));

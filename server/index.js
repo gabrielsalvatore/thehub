@@ -139,7 +139,7 @@ app.delete('/api/habits/:id', (req, res) => {
 
 // ---------- Applications (jobs + grad school) ----------
 
-const APP_FIELDS = ['type', 'name', 'role', 'status', 'deadline', 'url', 'notes'];
+const APP_FIELDS = ['type', 'name', 'role', 'status', 'deadline', 'url', 'notes', 'contacts', 'links', 'nextStep'];
 
 app.post('/api/applications', (req, res) => {
   if (!req.body.name?.trim()) return res.status(400).json({ error: 'Name is required' });
@@ -161,6 +161,19 @@ app.patch('/api/applications/:id', (req, res) => {
 app.delete('/api/applications/:id', (req, res) => {
   store.update((db) => (db.applications = db.applications.filter((a) => a.id !== req.params.id)));
   res.json({ ok: true });
+});
+
+// ---------- Grad School tab ----------
+
+// Answer or dismiss one of the open questions on the Grad School tab.
+app.patch('/api/grad/questions/:id', (req, res) => {
+  const q = store.update((db) => {
+    const found = db.grad.questions.find((x) => x.id === req.params.id);
+    if (found) Object.assign(found, pick(req.body, ['answer', 'done']));
+    return found;
+  });
+  if (!q) return res.status(404).json({ error: 'Not found' });
+  res.json(q);
 });
 
 // ---------- Syllabus ----------

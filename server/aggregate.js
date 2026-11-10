@@ -128,6 +128,7 @@ export async function dashboard({ force = false } = {}) {
     habits: db.habits,
     habitLog: db.habitLog,
     applications: db.applications,
+    grad: db.grad,
     sources: {
       canvas: strip(canvasRes),
       google: { ...mergeStatus(googleCal, gmail), accounts: google.isConnected() ? google.connectedAccounts() : [] },

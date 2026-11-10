@@ -24,6 +24,7 @@ const DEFAULTS = {
   dismissedEmails: {}, // { emailId: true }
   tokens: {}, // { google: {...}, microsoft: {...} }
   aiCache: { emails: {}, briefing: null },
+  grad: { resources: [], events: [], questions: [] }, // Grad School tab
 };
 
 let db = load();

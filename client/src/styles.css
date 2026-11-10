@@ -1123,3 +1123,32 @@ a:focus-visible {
 .details-notes textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 .details-foot { display: flex; justify-content: space-between; gap: 8px; }
 .btn-danger-text { color: var(--danger); }
+
+/* ---------- Grad School tab ---------- */
+
+.grad-questions { display: flex; flex-direction: column; gap: 12px; }
+.grad-question { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; background: var(--surface-2); }
+.grad-question-text { font-weight: 600; }
+.grad-question-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.grad-question-row input { flex: 1; min-width: 180px; }
+
+.grad-events { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.grad-event-when { font-size: 12px; font-weight: 600; color: var(--c-grad); text-transform: uppercase; letter-spacing: 0.03em; }
+.grad-event-title { font-weight: 600; }
+
+.grad-schools { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+.grad-school { border: 1px solid var(--border); border-top: 3px solid var(--c-grad); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.grad-school-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.grad-school-head h3 { margin: 0; font-size: 16px; text-transform: none; letter-spacing: 0; color: var(--text); }
+.grad-next { margin: 0; padding: 8px 10px; border-radius: 8px; background: color-mix(in srgb, var(--c-grad) 12%, transparent); }
+.grad-deadline { display: flex; align-items: center; gap: 8px; font-size: 13px; flex-wrap: wrap; }
+.grad-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); margin-bottom: 4px; }
+.grad-contact { padding: 4px 0; overflow-wrap: anywhere; }
+.grad-contact-links { display: flex; gap: 10px; flex-wrap: wrap; font-size: 13px; }
+.grad-links { margin: 0; padding-left: 18px; font-size: 13px; overflow-wrap: anywhere; }
+.grad-notes { width: 100%; resize: vertical; font: inherit; font-size: 13px; }
+.grad-notes-text { white-space: pre-wrap; font-size: 13px; color: var(--text-2); margin-top: 2px; }
+.grad-resources { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.grad-resource { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+.grad-resource-title { font-weight: 600; }
+.small { font-size: 12px; }

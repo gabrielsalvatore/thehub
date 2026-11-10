@@ -56,12 +56,28 @@ export default function DayPlan({ data, reload }) {
   useEffect(() => {
     setPlan(null);
     api.get(`/api/plan/${date}`).then(setPlan);
+    // Pick up changes made elsewhere (e.g. by Claude) when you come back to the
+    // window, so an old copy here never overwrites them. Skipped while a pop-up
+    // is open or a save is pending, so nothing you are typing gets replaced.
+    const refresh = () => {
+      if (document.visibilityState !== 'visible' || saveTimer.current || document.querySelector('[role="dialog"]')) return;
+      api.get(`/api/plan/${date}`).then(setPlan);
+    };
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
   }, [date]);
 
   const change = (next) => {
     setPlan(next);
     clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => api.put(`/api/plan/${date}`, next), 400);
+    saveTimer.current = setTimeout(() => {
+      saveTimer.current = null;
+      api.put(`/api/plan/${date}`, next);
+    }, 400);
   };
 
   const isToday = date === planDateFor(now);

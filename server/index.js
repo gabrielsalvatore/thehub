@@ -69,6 +69,9 @@ app.get('/api/plan/:date', (req, res) => {
   res.json(store.get().dayPlans[req.params.date] || { top: [], blocks: [] });
 });
 
+// Every saved day plan, for the Interview Prep tab.
+app.get('/api/plans', (req, res) => res.json(store.get().dayPlans));
+
 app.put('/api/plan/:date', (req, res) => {
   if (!DATE_RE.test(req.params.date)) return res.status(400).json({ error: 'Bad date' });
   const top = (req.body.top || []).slice(0, 3).map((t) => ({
@@ -80,7 +83,14 @@ app.put('/api/plan/:date', (req, res) => {
   }));
   const blocks = (req.body.blocks || []).slice(0, 40)
     .filter((b) => TIME_RE.test(b.start) && TIME_RE.test(b.end))
-    .map((b) => ({ id: str(b.id, 64) || store.newId(), start: b.start, end: b.end, label: str(b.label), notes: str(b.notes, 4000) }));
+    .map((b) => ({
+      id: str(b.id, 64) || store.newId(),
+      start: b.start,
+      end: b.end,
+      label: str(b.label),
+      notes: str(b.notes, 4000),
+      checklist: (Array.isArray(b.checklist) ? b.checklist : []).slice(0, 30).map((c) => ({ id: str(c.id, 64) || store.newId(), text: str(c.text), done: Boolean(c.done) })),
+    }));
   const plan = { top, blocks };
   store.update((db) => (db.dayPlans[req.params.date] = plan));
   res.json(plan);
@@ -139,7 +149,7 @@ app.delete('/api/habits/:id', (req, res) => {
 
 // ---------- Applications (jobs + grad school) ----------
 
-const APP_FIELDS = ['type', 'name', 'role', 'status', 'deadline', 'url', 'notes', 'contacts', 'links', 'nextStep'];
+const APP_FIELDS = ['type', 'name', 'role', 'status', 'deadline', 'url', 'notes', 'contacts', 'links', 'nextStep', 'keywords', 'prep'];
 
 app.post('/api/applications', (req, res) => {
   if (!req.body.name?.trim()) return res.status(400).json({ error: 'Name is required' });

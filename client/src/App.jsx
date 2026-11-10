@@ -4,6 +4,7 @@ import Dashboard from './components/Dashboard.jsx';
 import DayPlan from './components/DayPlan.jsx';
 import Applications from './components/Applications.jsx';
 import GradSchool from './components/GradSchool.jsx';
+import InterviewPrep from './components/InterviewPrep.jsx';
 import Syllabus from './components/Syllabus.jsx';
 import Sources from './components/Sources.jsx';
 import { useMeetingReminders } from './reminders.js';
@@ -14,6 +15,7 @@ const TABS = [
   { id: 'week', label: 'This week' },
   { id: 'applications', label: 'Applications' },
   { id: 'grad', label: 'Grad school' },
+  { id: 'prep', label: 'Interview prep' },
   { id: 'syllabus', label: 'Syllabi' },
   { id: 'sources', label: 'Sources' },
 ];
@@ -103,6 +105,7 @@ export default function App() {
         {data && tab === 'today' && <DayPlan data={data} reload={load} />}
         {data && tab === 'week' && <Dashboard data={data} reload={load} goTo={switchTab} />}
         {data && tab === 'applications' && <Applications applications={data.applications} reload={load} />}
+        {data && tab === 'prep' && <InterviewPrep data={data} reload={load} />}
         {data && tab === 'grad' && <GradSchool data={data} reload={load} />}
         {tab === 'syllabus' && <Syllabus reload={load} />}
         {data && tab === 'sources' && <Sources sources={data.sources} reload={load} />}

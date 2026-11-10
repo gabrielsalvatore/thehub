@@ -60,7 +60,7 @@ export default function DayPlan({ data, reload }) {
     // window, so an old copy here never overwrites them. Skipped while a pop-up
     // is open or a save is pending, so nothing you are typing gets replaced.
     const refresh = () => {
-      if (document.visibilityState !== 'visible' || saveTimer.current || document.querySelector('[role="dialog"]')) return;
+      if (document.visibilityState !== 'visible' || saveTimer.current || document.querySelector('dialog[open]')) return;
       api.get(`/api/plan/${date}`).then(setPlan);
     };
     window.addEventListener('focus', refresh);
@@ -271,6 +271,11 @@ export default function DayPlan({ data, reload }) {
                   <input type="time" value={b.end} onChange={(e) => e.target.value && setBlock(b.id, { end: e.target.value })} aria-label="End" />
                   <button className="block-open block-input" onClick={() => setOpenId(b.id)}>
                     <span>{b.label || <span className="muted">Untitled block</span>}</span>
+                    {b.checklist?.length > 0 && (
+                      <span className={`block-checks ${b.checklist.every((c) => c.done) ? 'block-checks-done' : ''}`} aria-label="Checklist progress">
+                        ☑ {b.checklist.filter((c) => c.done).length}/{b.checklist.length}
+                      </span>
+                    )}
                     {b.notes && <span className="block-has-notes" aria-label="Has notes">📝</span>}
                   </button>
                   <button className="icon-btn" onClick={() => removeBlock(b.id)} aria-label="Remove block" title="Remove">
@@ -458,6 +463,8 @@ function BlockDetails({ entry, top, items, isNow, onToggleTop, onChange, onDelet
           </div>
         )}
 
+        {!entry.event && <Checklist items={entry.checklist || []} onChange={(checklist) => onChange({ checklist })} />}
+
         {!entry.event && (
           <label className="details-notes">
             <span>Notes for this block</span>
@@ -477,6 +484,56 @@ function BlockDetails({ entry, top, items, isNow, onToggleTop, onChange, onDelet
         )}
       </div>
     </dialog>
+  );
+}
+
+// To-dos inside a block: tick them off, edit the text, add or remove items.
+function Checklist({ items, onChange }) {
+  const [focusId, setFocusId] = useState(null);
+  const set = (id, patch) => onChange(items.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+  const add = (after) => {
+    const item = { id: newId(), text: '', done: false };
+    const i = after ? items.findIndex((c) => c.id === after) + 1 : items.length;
+    onChange([...items.slice(0, i), item, ...items.slice(i)]);
+    setFocusId(item.id);
+  };
+  const remove = (id) => onChange(items.filter((c) => c.id !== id));
+  const done = items.filter((c) => c.done).length;
+
+  return (
+    <div className="details-checklist">
+      <span className="details-checklist-head">
+        Checklist{items.length > 0 && <span className="muted"> · {done}/{items.length} done</span>}
+      </span>
+      {items.map((c) => (
+        <div key={c.id} className={`check-row ${c.done ? 'check-row-done' : ''}`}>
+          <input type="checkbox" checked={c.done} onChange={() => set(c.id, { done: !c.done })} aria-label={c.done ? 'Mark not done' : 'Mark done'} />
+          <input
+            className="check-text"
+            value={c.text}
+            placeholder="To-do"
+            autoFocus={c.id === focusId}
+            onChange={(e) => set(c.id, { text: e.target.value })}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                add(c.id);
+              } else if (e.key === 'Backspace' && !c.text) {
+                e.preventDefault();
+                remove(c.id);
+              }
+            }}
+            aria-label="Checklist item"
+          />
+          <button className="icon-btn" onClick={() => remove(c.id)} aria-label="Remove item" title="Remove">
+            ×
+          </button>
+        </div>
+      ))}
+      <button className="btn btn-ghost btn-small check-add" onClick={() => add()}>
+        + Add item
+      </button>
+    </div>
   );
 }
 

@@ -76,6 +76,7 @@ app.put('/api/plan/:date', (req, res) => {
     text: str(t.text),
     done: Boolean(t.done),
     itemId: str(t.itemId, 200) || null,
+    notes: str(t.notes, 4000),
   }));
   const blocks = (req.body.blocks || []).slice(0, 40)
     .filter((b) => TIME_RE.test(b.start) && TIME_RE.test(b.end))

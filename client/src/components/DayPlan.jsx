@@ -45,6 +45,7 @@ export default function DayPlan({ data, reload }) {
   const [plan, setPlan] = useState(null);
   const [now, setNow] = useState(new Date());
   const [openId, setOpenId] = useState(null); // block or event shown in the details pop-up
+  const [openTopId, setOpenTopId] = useState(null); // top-3 item shown in its details pop-up
   const saveTimer = useRef(null);
 
   useEffect(() => {
@@ -100,7 +101,12 @@ export default function DayPlan({ data, reload }) {
 
   // ----- Step 1 -----
   const setTop = (i, fields) => change({ ...plan, top: top.map((t, j) => (j === i ? { ...t, ...fields } : t)) });
-  const addTop = (fields = {}) => top.length < 3 && change({ ...plan, top: [...top, { id: newId(), text: '', done: false, itemId: null, ...fields }] });
+  const addTop = (fields = {}, open = false) => {
+    if (top.length >= 3) return;
+    const id = newId();
+    change({ ...plan, top: [...top, { id, text: '', done: false, itemId: null, notes: '', ...fields }] });
+    if (open) setOpenTopId(id);
+  };
   const removeTop = (i) => change({ ...plan, top: top.filter((_, j) => j !== i) });
 
   const toggleTop = async (i) => {
@@ -189,19 +195,17 @@ export default function DayPlan({ data, reload }) {
               <div key={t.id} className={`top3-row ${t.done ? 'top3-done' : ''}`}>
                 <input type="checkbox" checked={t.done} onChange={() => toggleTop(i)} aria-label={`Mark #${i + 1} done`} />
                 <span className="top3-num">{i + 1}</span>
-                <input
-                  className="top3-text"
-                  value={t.text}
-                  placeholder="Something that must happen today"
-                  onChange={(e) => setTop(i, { text: e.target.value })}
-                />
+                <button className="block-open top3-text" onClick={() => setOpenTopId(t.id)} title="Show details">
+                  <span>{t.text || <span className="muted">Something that must happen today</span>}</span>
+                  {(t.notes || t.itemId) && <span className="block-has-notes" aria-label="Has details">📝</span>}
+                </button>
                 <button className="icon-btn" onClick={() => removeTop(i)} aria-label={`Remove #${i + 1}`} title="Remove">
                   ×
                 </button>
               </div>
             ))}
             {top.length < 3 && (
-              <button className="btn btn-ghost top3-add" onClick={() => addTop()}>
+              <button className="btn btn-ghost top3-add" onClick={() => addTop({}, true)}>
                 + Add #{top.length + 1}
               </button>
             )}
@@ -281,7 +285,90 @@ export default function DayPlan({ data, reload }) {
           onClose={() => setOpenId(null)}
         />
       )}
+
+      {openTopId && top.some((t) => t.id === openTopId) && (
+        <TopDetails
+          index={top.findIndex((t) => t.id === openTopId)}
+          item={top.find((t) => t.id === openTopId)}
+          linked={data.items.find((it) => it.id === top.find((t) => t.id === openTopId).itemId)}
+          blocks={blocks.filter((b) => b.label && b.label === top.find((t) => t.id === openTopId).text)}
+          onToggle={() => toggleTop(top.findIndex((t) => t.id === openTopId))}
+          onChange={(fields) => setTop(top.findIndex((t) => t.id === openTopId), fields)}
+          onOpenBlock={(id) => {
+            setOpenTopId(null);
+            setOpenId(id);
+          }}
+          onRemove={() => {
+            removeTop(top.findIndex((t) => t.id === openTopId));
+            setOpenTopId(null);
+          }}
+          onClose={() => setOpenTopId(null)}
+        />
+      )}
     </div>
+  );
+}
+
+// Pop-up for one top-3 item: what it is, your notes on it, the task it came
+// from (if any) and the schedule blocks set aside for it.
+function TopDetails({ index, item, linked, blocks, onToggle, onChange, onOpenBlock, onRemove, onClose }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    ref.current?.showModal();
+  }, []);
+
+  return (
+    <dialog ref={ref} className="details" onClose={onClose} onClick={(e) => e.target === ref.current && ref.current.close()}>
+      <div className="details-body">
+        <div className="details-head">
+          <span className="step-tag">Top 3 · #{index + 1}</span>
+          <button className="icon-btn details-close" onClick={() => ref.current.close()} aria-label="Close">
+            ×
+          </button>
+        </div>
+
+        <input
+          className="details-title details-title-input"
+          value={item.text}
+          placeholder="Something that must happen today"
+          autoFocus={!item.text}
+          onChange={(e) => onChange({ text: e.target.value })}
+          aria-label="Top-3 item"
+        />
+
+        <label className="details-done">
+          <input type="checkbox" checked={item.done} onChange={onToggle} />
+          {item.done ? 'Done ✓' : 'Mark done'}
+        </label>
+
+        {linked && <LinkedInfo linked={linked} />}
+
+        {blocks.length > 0 && (
+          <div className="details-link-to">
+            <span className="muted">In your schedule:</span>
+            {blocks.map((b) => (
+              <button key={b.id} className="chip" onClick={() => onOpenBlock(b.id)}>
+                {fmtHHMM(b.start)}–{fmtHHMM(b.end)}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <label className="details-notes">
+          <span>Details</span>
+          <textarea rows={8} value={item.notes || ''} placeholder="What this means, steps, links, what done looks like…" onChange={(e) => onChange({ notes: e.target.value })} />
+        </label>
+
+        <div className="details-foot">
+          <button className="btn btn-ghost btn-danger-text" onClick={onRemove}>
+            Remove from top 3
+          </button>
+          <button className="btn btn-primary" onClick={() => ref.current.close()}>
+            Done
+          </button>
+        </div>
+      </div>
+    </dialog>
   );
 }
 
@@ -342,10 +429,47 @@ function BlockDetails({ entry, top, items, isNow, onToggleTop, onChange, onDelet
           </label>
         )}
 
-        {linked && (
+        {linked && <LinkedInfo linked={linked} isEvent={entry.event} />}
+
+        {!entry.event && !topItem && top.some((t) => t.text) && (
+          <div className="details-link-to">
+            <span className="muted">Work on a top-3 item in this block:</span>
+            {top.filter((t) => t.text).map((t, i) => (
+              <button key={t.id} className="chip" onClick={() => onChange({ label: t.text })}>
+                #{i + 1} {t.text}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {!entry.event && (
+          <label className="details-notes">
+            <span>Notes for this block</span>
+            <textarea rows={6} value={entry.notes || ''} placeholder="Steps, links, what done looks like…" onChange={(e) => onChange({ notes: e.target.value })} />
+          </label>
+        )}
+
+        {!entry.event && (
+          <div className="details-foot">
+            <button className="btn btn-ghost btn-danger-text" onClick={onDelete}>
+              Delete block
+            </button>
+            <button className="btn btn-primary" onClick={() => ref.current.close()}>
+              Done
+            </button>
+          </div>
+        )}
+      </div>
+    </dialog>
+  );
+}
+
+// Details of the task, assignment or calendar event a block or top-3 item points at.
+function LinkedInfo({ linked, isEvent = false }) {
+  return (
           <div className="details-linked">
             <dl>
-              {!entry.event && linked.when && (
+              {!isEvent && linked.when && (
                 <>
                   <dt>Due</dt>
                   <dd>{dueLabel(linked)}</dd>
@@ -392,37 +516,5 @@ function BlockDetails({ entry, top, items, isNow, onToggleTop, onChange, onDelet
               )}
             </div>
           </div>
-        )}
-
-        {!entry.event && !topItem && top.some((t) => t.text) && (
-          <div className="details-link-to">
-            <span className="muted">Work on a top-3 item in this block:</span>
-            {top.filter((t) => t.text).map((t, i) => (
-              <button key={t.id} className="chip" onClick={() => onChange({ label: t.text })}>
-                #{i + 1} {t.text}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {!entry.event && (
-          <label className="details-notes">
-            <span>Notes for this block</span>
-            <textarea rows={6} value={entry.notes || ''} placeholder="Steps, links, what done looks like…" onChange={(e) => onChange({ notes: e.target.value })} />
-          </label>
-        )}
-
-        {!entry.event && (
-          <div className="details-foot">
-            <button className="btn btn-ghost btn-danger-text" onClick={onDelete}>
-              Delete block
-            </button>
-            <button className="btn btn-primary" onClick={() => ref.current.close()}>
-              Done
-            </button>
-          </div>
-        )}
-      </div>
-    </dialog>
   );
 }
